@@ -141,7 +141,7 @@ void add_sphere( struct matrix * polygons,
                  double cx, double cy, double cz,
                  double r, int steps ) {
   struct matrix *points = generate_sphere(cx, cy, cz, r, steps);
-  int index, q, lat, longt; //index = p, q = p + n
+  int p0, p1, p2, p3, lat, longt; //index = p, q = p + n
   int latStop, longStop, latStart, longStart;
   latStart = 0;
   latStop = steps;
@@ -151,22 +151,24 @@ void add_sphere( struct matrix * polygons,
   steps++;
   for ( lat = latStart; lat < latStop; lat++ ) {
     for ( longt = longStart; longt < longStop; longt++ ) {
-      index = lat * (steps) + longt;
-      q = index + steps;
+      p0 = lat * (steps) + longt;
+      p1 = p0 + 1;
+      p2 = p0 + steps;
       if (lat == latStop - 1){
-        q = longt;
+        p2 = longt;
       }
+      p3 = p2 + 1;
       if (longt != longStop - 1){ //pole
         add_polygon(polygons,
-                    points->m[0][index], points->m[1][index], points->m[2][index],
-                    points->m[0][index+1], points->m[1][index+1], points->m[2][index+1],
-                    points->m[0][q+1], points->m[1][q+1], points->m[2][q+1]);
+                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
+                    points->m[0][p1], points->m[1][p1], points->m[2][p1],
+                    points->m[0][p3], points->m[1][p3], points->m[2][p3]);
       }
       if (longt != 0){ //pole
         add_polygon(polygons,
-                    points->m[0][index], points->m[1][index], points->m[2][index],
-                    points->m[0][q+1], points->m[1][q+1], points->m[2][q+1],
-                    points->m[0][q], points->m[1][q], points->m[2][q]);
+                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
+                    points->m[0][p3], points->m[1][p3], points->m[2][p3],
+                    points->m[0][p2], points->m[1][p2], points->m[2][p2]);
       }
     }
   }
@@ -234,12 +236,12 @@ struct matrix * generate_sphere(double cx, double cy, double cz,
 
   should call generate_torus to create the necessary points
   ====================*/
-void add_torus( struct matrix * edges,
+void add_torus( struct matrix * polygons,
                 double cx, double cy, double cz,
                 double r1, double r2, int steps ) {
 
   struct matrix *points = generate_torus(cx, cy, cz, r1, r2, steps);
-  int index, lat, longt;
+  int p0, p1, p2, p3, lat, longt;
   int latStop, longStop, latStart, longStart;
   latStart = 0;
   latStop = steps;
@@ -248,14 +250,26 @@ void add_torus( struct matrix * edges,
 
   for ( lat = latStart; lat < latStop; lat++ ) {
     for ( longt = longStart; longt < longStop; longt++ ) {
-
-      index = lat * steps + longt;
-      add_edge( edges, points->m[0][index],
-                points->m[1][index],
-                points->m[2][index],
-                points->m[0][index] + 1,
-                points->m[1][index] + 1,
-                points->m[2][index] + 1);
+      p0 = lat * steps + longt;
+      p1 = p0 + 1;
+      p2 = p0 + steps;
+      p3 = p2 + 1;
+      if (lat == latStop - 1){
+        p2 = longt;
+        p3 %= steps * steps;
+      }
+      if (longt == longStop - 1){ //wrap back around
+        p1 -= steps;
+        p3 -= steps;
+      }
+      add_polygon(polygons,
+                  points->m[0][p0], points->m[1][p0], points->m[2][p0],
+                  points->m[0][p2], points->m[1][p2], points->m[2][p2],
+                  points->m[0][p3], points->m[1][p3], points->m[2][p3]);
+      add_polygon(polygons,
+                  points->m[0][p0], points->m[1][p0], points->m[2][p0],
+                  points->m[0][p3], points->m[1][p3], points->m[2][p3],
+                  points->m[0][p1], points->m[1][p1], points->m[2][p1]);
     }
   }
   free_matrix(points);
