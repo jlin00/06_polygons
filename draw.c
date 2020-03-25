@@ -157,12 +157,14 @@ void add_sphere( struct matrix * polygons,
       p2 = (index + steps) % points->lastcol;
       p3 = p2 + 1;
       if (longt != steps - 2){ //pole
-        add_polygon(polygons, points->m[0][p0], points->m[1][p0], points->m[2][p0],
+        add_polygon(polygons,
+                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
                     points->m[0][p1], points->m[1][p1], points->m[2][p1],
                     points->m[0][p3], points->m[1][p3], points->m[2][p3]);
       }
       if (longt != 0){ //pole
-        add_polygon(polygons, points->m[0][p0], points->m[1][p0], points->m[2][p0],
+        add_polygon(polygons,
+                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
                     points->m[0][p3], points->m[1][p3], points->m[2][p3],
                     points->m[0][p2], points->m[1][p2], points->m[2][p2]);
       }
@@ -237,7 +239,7 @@ void add_torus( struct matrix * polygons,
                 double r1, double r2, int steps ) {
 
   struct matrix *points = generate_torus(cx, cy, cz, r1, r2, steps);
-  int p0, p1, p2, p3, lat, longt;
+  int index, p0, p1, p2, p3, lat, longt;
   int latStop, longStop, latStart, longStart;
   latStart = 0;
   latStop = steps;
@@ -246,18 +248,16 @@ void add_torus( struct matrix * polygons,
 
   for ( lat = latStart; lat < latStop; lat++ ) {
     for ( longt = longStart; longt < longStop; longt++ ) {
-      p0 = lat * steps + longt;
+      index = lat * steps + longt;
+      p0 = index;
       p1 = p0 + 1;
-      p2 = p0 + steps;
+      p2 = (p0 + steps) % points->lastcol;
       p3 = p2 + 1;
-      if (lat == latStop - 1){
-        p2 = longt;
-        p3 %= steps * steps;
-      }
-      if (longt == longStop - 1){ //wrap back around
+      if (longt == steps - 1){ //wrap back around
         p1 -= steps;
         p3 -= steps;
       }
+      p3 %= points->lastcol;
       add_polygon(polygons,
                   points->m[0][p0], points->m[1][p0], points->m[2][p0],
                   points->m[0][p2], points->m[1][p2], points->m[2][p2],
