@@ -44,9 +44,9 @@ void add_polygon( struct matrix *polygons,
 void draw_polygons( struct matrix *polygons, screen s, color c ) {
   int i;
   for (i = 0; i < polygons->lastcol; i += 3){
+    draw_line(polygons->m[0][i], polygons->m[1][i], polygons->m[0][i+1], polygons->m[1][i+1], s, c);
     draw_line(polygons->m[0][i+1], polygons->m[1][i+1], polygons->m[0][i+2], polygons->m[1][i+2], s, c);
     draw_line(polygons->m[0][i+2], polygons->m[1][i+2], polygons->m[0][i], polygons->m[1][i], s, c);
-    draw_line(polygons->m[0][i], polygons->m[1][i], polygons->m[0][i+1], polygons->m[1][i+1], s, c);
   }
 }
 
@@ -141,7 +141,7 @@ void add_sphere( struct matrix * polygons,
                  double cx, double cy, double cz,
                  double r, int steps ) {
   struct matrix *points = generate_sphere(cx, cy, cz, r, steps);
-  int p0, p1, p2, p3, lat, longt; //index = p, q = p + n
+  int index, p0, p1, p2, p3, lat, longt; //index = p, q = p + n
   int latStop, longStop, latStart, longStart;
   latStart = 0;
   latStop = steps;
@@ -151,22 +151,18 @@ void add_sphere( struct matrix * polygons,
   steps++;
   for ( lat = latStart; lat < latStop; lat++ ) {
     for ( longt = longStart; longt < longStop; longt++ ) {
-      p0 = lat * (steps) + longt;
-      p1 = p0 + 1;
-      p2 = p0 + steps;
-      if (lat == latStop - 1){
-        p2 = longt;
-      }
+      index = lat * (steps) + longt;
+      p0 = index;
+      p1 = index + 1;
+      p2 = (index + steps) % points->lastcol;
       p3 = p2 + 1;
-      if (longt != longStop - 1){ //pole
-        add_polygon(polygons,
-                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
+      if (longt != steps - 2){ //pole
+        add_polygon(polygons, points->m[0][p0], points->m[1][p0], points->m[2][p0],
                     points->m[0][p1], points->m[1][p1], points->m[2][p1],
                     points->m[0][p3], points->m[1][p3], points->m[2][p3]);
       }
       if (longt != 0){ //pole
-        add_polygon(polygons,
-                    points->m[0][p0], points->m[1][p0], points->m[2][p0],
+        add_polygon(polygons, points->m[0][p0], points->m[1][p0], points->m[2][p0],
                     points->m[0][p3], points->m[1][p3], points->m[2][p3],
                     points->m[0][p2], points->m[1][p2], points->m[2][p2]);
       }
